@@ -141,31 +141,31 @@ func (c *Client) readPump(config *Config, ctx context.Context) {
 	})
 
 	for {
-		select {
-		case <-ctx.Done():
+		// Check context before blocking on read
+		if ctx.Err() != nil {
 			return
-		default:
-			_, msgBytes, err := c.conn.ReadMessage()
-			if err != nil {
-				if ws.IsUnexpectedCloseError(
-					err,
-					ws.CloseGoingAway,
-					ws.CloseAbnormalClosure,
-				) {
-					// unexpected close
-				}
-				return
-			}
+		}
 
-			var msg Message
-			if err := json.Unmarshal(msgBytes, &msg); err != nil {
-				continue
+		_, msgBytes, err := c.conn.ReadMessage()
+		if err != nil {
+			if ws.IsUnexpectedCloseError(
+				err,
+				ws.CloseGoingAway,
+				ws.CloseAbnormalClosure,
+			) {
+				// unexpected close
 			}
-			msg.Sender = c.id
+			return
+		}
 
-			if c.hub.onMessage != nil {
-				c.hub.onMessage(c, &msg)
-			}
+		var msg Message
+		if err := json.Unmarshal(msgBytes, &msg); err != nil {
+			continue
+		}
+		msg.Sender = c.id
+
+		if c.hub.onMessage != nil {
+			c.hub.onMessage(c, &msg)
 		}
 	}
 }

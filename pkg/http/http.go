@@ -110,8 +110,6 @@ func (cb *circuitBreaker) allow() bool {
 	defer cb.mu.Unlock()
 
 	switch cb.state {
-	case CircuitClosed:
-		return true
 	case CircuitOpen:
 		if time.Since(cb.lastStateChange) > cb.timeout {
 			cb.state = CircuitHalfOpen
@@ -119,10 +117,10 @@ func (cb *circuitBreaker) allow() bool {
 			return true
 		}
 		return false
-	case CircuitHalfOpen:
+	default:
+		// CircuitClosed or CircuitHalfOpen allow requests
 		return true
 	}
-	return false
 }
 
 // recordSuccess records a successful request.

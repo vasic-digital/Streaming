@@ -296,3 +296,134 @@ func TestResponse_IsRetryable(t *testing.T) {
 		})
 	}
 }
+
+func TestClient_Request_InvalidURL(t *testing.T) {
+	c := NewClient(&Config{
+		MaxRetries:              1,
+		Timeout:                 5 * time.Second,
+		BackoffBase:             10 * time.Millisecond,
+		BackoffMax:              50 * time.Millisecond,
+		CircuitBreakerThreshold: 5,
+		CircuitBreakerTimeout:   10 * time.Second,
+	})
+
+	// Invalid URL with control character triggers NewRequestWithContext error
+	resp, err := c.Request(context.Background(), "GET", "http://[::1]:namedport", nil)
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.Contains(t, err.Error(), "failed to create request")
+}
+
+func TestClient_Request_NetworkError(t *testing.T) {
+	c := NewClient(&Config{
+		MaxRetries:              1,
+		Timeout:                 100 * time.Millisecond,
+		BackoffBase:             10 * time.Millisecond,
+		BackoffMax:              50 * time.Millisecond,
+		CircuitBreakerThreshold: 10,
+		CircuitBreakerTimeout:   10 * time.Second,
+	})
+
+	// Connect to a port that is not listening to trigger network error
+	resp, err := c.Request(context.Background(), "GET", "http://127.0.0.1:1", nil)
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.Contains(t, err.Error(), "request failed")
+}
+
+func TestClient_Request_CircuitBreakerBlocksRetry(t *testing.T) {
+	var attempts atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			attempts.Add(1)
+			w.WriteHeader(http.StatusServiceUnavailable)
+		},
+	))
+	defer server.Close()
+
+	c := NewClient(&Config{
+		MaxRetries:              10,
+		Timeout:                 5 * time.Second,
+		BackoffBase:             5 * time.Millisecond,
+		BackoffMax:              20 * time.Millisecond,
+		CircuitBreakerThreshold: 2, // Opens after 2 failures
+		CircuitBreakerTimeout:   10 * time.Second,
+	})
+
+	resp, err := c.Request(context.Background(), "GET", server.URL, nil)
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	// After 2 failures, circuit breaker opens and blocks remaining retries
+	// The error should mention circuit breaker
+	assert.Contains(t, err.Error(), "circuit breaker is open")
+}
+
+func TestCircuitBreaker_AllowInHalfOpenState(t *testing.T) {
+	cb := newCircuitBreaker(2, 10*time.Millisecond)
+
+	// Trip the circuit breaker
+	cb.recordFailure()
+	cb.recordFailure()
+	assert.Equal(t, CircuitOpen, cb.State())
+
+	// Wait for timeout to transition to half-open
+	time.Sleep(15 * time.Millisecond)
+	assert.True(t, cb.allow()) // Transitions to half-open
+	assert.Equal(t, CircuitHalfOpen, cb.State())
+
+	// Subsequent calls in half-open should still allow
+	assert.True(t, cb.allow())
+	assert.Equal(t, CircuitHalfOpen, cb.State())
+}
+
+func TestClient_calculateBackoff_CappedAtMax(t *testing.T) {
+	c := NewClient(&Config{
+		MaxRetries:              10,
+		Timeout:                 5 * time.Second,
+		BackoffBase:             100 * time.Millisecond,
+		BackoffMax:              500 * time.Millisecond,
+		CircuitBreakerThreshold: 5,
+		CircuitBreakerTimeout:   10 * time.Second,
+	})
+
+	// Attempt 1: 100ms * 2^0 = 100ms
+	assert.Equal(t, 100*time.Millisecond, c.calculateBackoff(1))
+
+	// Attempt 2: 100ms * 2^1 = 200ms
+	assert.Equal(t, 200*time.Millisecond, c.calculateBackoff(2))
+
+	// Attempt 3: 100ms * 2^2 = 400ms
+	assert.Equal(t, 400*time.Millisecond, c.calculateBackoff(3))
+
+	// Attempt 4: 100ms * 2^3 = 800ms > 500ms max, capped to 500ms
+	assert.Equal(t, 500*time.Millisecond, c.calculateBackoff(4))
+
+	// Attempt 5: 100ms * 2^4 = 1600ms > 500ms max, capped to 500ms
+	assert.Equal(t, 500*time.Millisecond, c.calculateBackoff(5))
+}
+
+func TestResponse_IsSuccess(t *testing.T) {
+	tests := []struct {
+		name       string
+		statusCode int
+		expected   bool
+	}{
+		{"199 Informational", 199, false},
+		{"200 OK", 200, true},
+		{"201 Created", 201, true},
+		{"204 No Content", 204, true},
+		{"299 Custom 2xx", 299, true},
+		{"300 Multiple Choices", 300, false},
+		{"400 Bad Request", 400, false},
+		{"500 Internal Server Error", 500, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			resp := &Response{
+				Response: &http.Response{StatusCode: tt.statusCode},
+			}
+			assert.Equal(t, tt.expected, resp.IsSuccess())
+		})
+	}
+}

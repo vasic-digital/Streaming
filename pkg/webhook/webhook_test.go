@@ -474,3 +474,113 @@ func TestPayload_JSON(t *testing.T) {
 		})
 	}
 }
+
+func TestDispatcher_Send_InvalidURL(t *testing.T) {
+	// Test the path where http.NewRequestWithContext fails due to invalid URL
+	d := NewDispatcher(&DispatcherConfig{
+		MaxRetries:  0,
+		Timeout:     5 * time.Second,
+		BackoffBase: 10 * time.Millisecond,
+		BackoffMax:  50 * time.Millisecond,
+	})
+
+	webhook := &Webhook{
+		URL:    "://invalid-url", // Invalid URL scheme
+		Active: true,
+	}
+
+	payload := &Payload{ID: "invalid", Event: "test"}
+
+	err := d.Send(context.Background(), webhook, payload)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to create request")
+}
+
+func TestDispatcher_calculateBackoff_ExceedsMax(t *testing.T) {
+	// Test the backoff capping logic
+	d := NewDispatcher(&DispatcherConfig{
+		MaxRetries:  10,
+		Timeout:     5 * time.Second,
+		BackoffBase: time.Second,
+		BackoffMax:  5 * time.Second,
+	})
+
+	// At attempt 5, backoff would be 1s * 2^4 = 16s, should be capped at 5s
+	backoff := d.calculateBackoff(5)
+	assert.Equal(t, 5*time.Second, backoff)
+
+	// At attempt 10, backoff would be 1s * 2^9 = 512s, should be capped at 5s
+	backoff = d.calculateBackoff(10)
+	assert.Equal(t, 5*time.Second, backoff)
+}
+
+func TestDispatcher_Send_NoSecret(t *testing.T) {
+	// Test Send without a secret (no signature header set)
+	server := httptest.NewServer(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			sig := r.Header.Get("X-Signature-256")
+			// No signature should be present
+			if sig != "" {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+		},
+	))
+	defer server.Close()
+
+	d := NewDispatcher(nil)
+
+	webhook := &Webhook{
+		URL:    server.URL,
+		Secret: "", // No secret
+		Active: true,
+	}
+
+	payload := &Payload{ID: "no-secret", Event: "test"}
+
+	err := d.Send(context.Background(), webhook, payload)
+	require.NoError(t, err)
+}
+
+func TestDispatcher_Send_MarshalError(t *testing.T) {
+	// Test the path where json.Marshal fails
+	d := NewDispatcher(nil)
+
+	webhook := &Webhook{
+		URL:    "http://example.com",
+		Active: true,
+	}
+
+	// Create a payload with unmarshalable data (channel)
+	payload := &Payload{
+		ID:    "marshal-error",
+		Event: "test",
+		Data:  make(chan int), // Channels can't be marshaled
+	}
+
+	err := d.Send(context.Background(), webhook, payload)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to marshal payload")
+}
+
+func TestDispatcher_doSend_RequestError(t *testing.T) {
+	// Test when the HTTP client returns an error (connection refused)
+	d := NewDispatcher(&DispatcherConfig{
+		MaxRetries:  0,
+		Timeout:     100 * time.Millisecond,
+		BackoffBase: 10 * time.Millisecond,
+		BackoffMax:  50 * time.Millisecond,
+	})
+
+	webhook := &Webhook{
+		URL:    "http://localhost:59999", // Port that's not listening
+		Active: true,
+	}
+
+	payload := &Payload{ID: "req-error", Event: "test"}
+
+	err := d.Send(context.Background(), webhook, payload)
+	assert.Error(t, err)
+	// The error will be from the HTTP client failing to connect
+}
