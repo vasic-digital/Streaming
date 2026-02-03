@@ -1,0 +1,265 @@
+classDiagram
+    direction TB
+
+    class Transport {
+        <<interface>>
+        +Send(ctx context.Context, data []byte) error
+        +Receive(ctx context.Context) ([]byte, error)
+        +Close() error
+    }
+
+    class StreamServer {
+        <<interface>>
+        +Unary(ctx context.Context, req []byte) ([]byte, error)
+        +ServerStream(ctx context.Context, req []byte, stream chan~[]byte~) error
+        +ClientStream(ctx context.Context, stream chan~[]byte~) ([]byte, error)
+        +BidirectionalStream(ctx context.Context, recv chan~[]byte~, send chan~[]byte~) error
+    }
+
+    class StreamInterceptor {
+        <<function type>>
+        (srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error
+    }
+
+    class Factory {
+        -mu sync.RWMutex
+        -creators map~Type, func~
+        +NewFactory() Factory
+        +Register(t Type, creator func) void
+        +Create(config *Config) (Transport, error)
+        +SupportedTypes() []Type
+    }
+
+    class channelTransport {
+        -config *Config
+        -sendCh chan~[]byte~
+        -recvCh chan~[]byte~
+        -closed bool
+        -closeMu sync.Mutex
+        +Send(ctx context.Context, data []byte) error
+        +Receive(ctx context.Context) ([]byte, error)
+        +Close() error
+        +SendChannel() chan~[]byte~
+        +ReceiveChannel() chan~[]byte~
+    }
+
+    class Broker {
+        -config *Config
+        -clients map~string, *Client~
+        -clientsMu sync.RWMutex
+        -ctx context.Context
+        -cancel context.CancelFunc
+        -wg sync.WaitGroup
+        -clientCount atomic.Int64
+        +NewBroker(config *Config) *Broker
+        +AddClient(w http.ResponseWriter, r *http.Request) (*Client, error)
+        +RemoveClient(id string) void
+        +Broadcast(event *Event) void
+        +SendTo(clientID string, event *Event) error
+        +ClientCount() int
+        +Close() void
+        +ServeHTTP(w http.ResponseWriter, r *http.Request) void
+    }
+
+    class Event {
+        +ID string
+        +Type string
+        +Data []byte
+        +Retry int
+        +Format() []byte
+    }
+
+    class SSEClient {
+        +ID string
+        +Channel chan~[]byte~
+        +LastEventID string
+        +CreatedAt time.Time
+    }
+
+    class SSEConfig {
+        +BufferSize int
+        +HeartbeatInterval time.Duration
+        +MaxClients int
+    }
+
+    class Hub {
+        -config *Config
+        -upgrader ws.Upgrader
+        -clients map~string, *Client~
+        -rooms map~string, *Room~
+        -register chan~*Client~
+        -unregister chan~*Client~
+        -ctx context.Context
+        -cancel context.CancelFunc
+        -onMessage func
+        +NewHub(config *Config) *Hub
+        +OnMessage(handler func) void
+        +ServeWS(w http.ResponseWriter, r *http.Request) (*Client, error)
+        +Broadcast(msg *Message) error
+        +SendToRoom(roomName string, msg *Message) error
+        +JoinRoom(clientID string, roomName string) error
+        +LeaveRoom(clientID string, roomName string) error
+        +ClientCount() int
+        +RoomCount() int
+        +RoomClientCount(roomName string) int
+        +Close() void
+    }
+
+    class WSClient {
+        -id string
+        -conn *ws.Conn
+        -send chan~[]byte~
+        -hub *Hub
+        -rooms map~string, bool~
+        +ID() string
+        +Send(data []byte) error
+        +Close() error
+    }
+
+    class Message {
+        +Type string
+        +Room string
+        +Data json.RawMessage
+        +Sender string
+    }
+
+    class Room {
+        -name string
+        -clients map~string, *Client~
+        -mu sync.RWMutex
+    }
+
+    class WSConfig {
+        +ReadBufferSize int
+        +WriteBufferSize int
+        +PingInterval time.Duration
+        +PongWait time.Duration
+        +WriteWait time.Duration
+        +MaxMessageSize int64
+        +AllowedOrigins []string
+    }
+
+    class HealthServer {
+        -mu sync.RWMutex
+        -services map~string, ServingStatus~
+        +NewHealthServer() *HealthServer
+        +SetServiceStatus(service string, status ServingStatus) void
+        +Check(ctx context.Context, req *HealthCheckRequest) (*HealthCheckResponse, error)
+        +Watch(req *HealthCheckRequest, stream Health_WatchServer) error
+    }
+
+    class GRPCConfig {
+        +Address string
+        +TLSCertFile string
+        +TLSKeyFile string
+        +MaxRecvMsgSize int
+        +MaxSendMsgSize int
+        +MaxConcurrentStreams uint32
+    }
+
+    class Dispatcher {
+        -config *DispatcherConfig
+        -client *http.Client
+        -deliveredCount int64
+        -failedCount int64
+        +NewDispatcher(config *DispatcherConfig) *Dispatcher
+        +Send(ctx context.Context, webhook *Webhook, payload *Payload) error
+        +Stats() (int64, int64)
+    }
+
+    class Webhook {
+        +URL string
+        +Secret string
+        +Events []string
+        +Active bool
+    }
+
+    class Payload {
+        +ID string
+        +Event string
+        +Data interface{}
+        +Timestamp time.Time
+        +Signature string
+    }
+
+    class Registry {
+        -mu sync.RWMutex
+        -webhooks map~string, *Webhook~
+        +NewRegistry() *Registry
+        +Register(id string, webhook *Webhook) void
+        +Unregister(id string) void
+        +Get(id string) (*Webhook, bool)
+        +List() map~string, *Webhook~
+        +Count() int
+        +MatchingWebhooks(event string) []*Webhook
+    }
+
+    class DispatcherConfig {
+        +MaxRetries int
+        +Timeout time.Duration
+        +BackoffBase time.Duration
+        +BackoffMax time.Duration
+        +SignatureHeader string
+        +UserAgent string
+    }
+
+    class HTTPClient {
+        -config *Config
+        -client *http.Client
+        -breaker *circuitBreaker
+        +NewClient(config *Config) *Client
+        +Request(ctx context.Context, method string, url string, body io.Reader) (*Response, error)
+        +CircuitState() CircuitState
+    }
+
+    class Response {
+        +*http.Response
+        +BodyBytes() ([]byte, error)
+        +IsSuccess() bool
+        +IsRetryable() bool
+    }
+
+    class HTTPConfig {
+        +MaxRetries int
+        +Timeout time.Duration
+        +BackoffBase time.Duration
+        +BackoffMax time.Duration
+        +CircuitBreakerThreshold int
+        +CircuitBreakerTimeout time.Duration
+    }
+
+    class TransportConfig {
+        +Type Type
+        +Address string
+        +Options map~string, interface{}~
+    }
+
+    %% Interface implementations
+    channelTransport ..|> Transport : implements
+
+    %% Composition relationships
+    Broker *-- SSEClient : manages
+    Broker *-- SSEConfig : configured by
+    Broker o-- Event : broadcasts
+
+    Hub *-- WSClient : manages
+    Hub *-- Room : contains
+    Hub *-- WSConfig : configured by
+    Hub o-- Message : routes
+
+    WSClient --> Hub : references
+    Room *-- WSClient : groups
+
+    Factory --> Transport : creates
+    Factory --> TransportConfig : reads
+
+    Dispatcher *-- DispatcherConfig : configured by
+    Dispatcher o-- Webhook : delivers to
+    Dispatcher o-- Payload : delivers
+
+    Registry *-- Webhook : stores
+
+    HTTPClient *-- HTTPConfig : configured by
+    HTTPClient --> Response : returns
+
+    HealthServer *-- GRPCConfig : configured by

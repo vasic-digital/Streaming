@@ -1,0 +1,64 @@
+graph TB
+    subgraph "digital.vasic.streaming"
+        subgraph "Protocol Packages"
+            SSE["pkg/sse<br/>---<br/>Broker, Event, Client<br/>Observer Pattern"]
+            WS["pkg/websocket<br/>---<br/>Hub, Client, Room, Message<br/>Hub + Pub/Sub Pattern"]
+            GRPC["pkg/grpc<br/>---<br/>StreamServer, HealthServer<br/>StreamInterceptor<br/>Adapter + Chain Pattern"]
+            WH["pkg/webhook<br/>---<br/>Dispatcher, Registry<br/>Webhook, Payload<br/>Retry + Strategy Pattern"]
+        end
+
+        subgraph "Client Package"
+            HTTP["pkg/http<br/>---<br/>Client, Response<br/>CircuitBreaker<br/>Circuit Breaker + Retry Pattern"]
+        end
+
+        subgraph "Abstraction Package"
+            TR["pkg/transport<br/>---<br/>Transport interface<br/>Factory, Config, Type<br/>Strategy + Factory Pattern"]
+        end
+    end
+
+    subgraph "External Dependencies"
+        GORILLA["github.com/gorilla/websocket"]
+        GRPCLIB["google.golang.org/grpc"]
+        TESTIFY["github.com/stretchr/testify"]
+    end
+
+    subgraph "Go Standard Library"
+        NETHTTP["net/http"]
+        CRYPTO["crypto/hmac, crypto/sha256"]
+        SYNC["sync, sync/atomic"]
+        CTX["context"]
+    end
+
+    WS --> GORILLA
+    GRPC --> GRPCLIB
+
+    SSE --> NETHTTP
+    WS --> NETHTTP
+    WH --> NETHTTP
+    HTTP --> NETHTTP
+    WH --> CRYPTO
+
+    SSE --> SYNC
+    WS --> SYNC
+    GRPC --> SYNC
+    WH --> SYNC
+    HTTP --> SYNC
+    TR --> SYNC
+
+    SSE --> CTX
+    WS --> CTX
+    GRPC --> CTX
+    WH --> CTX
+    HTTP --> CTX
+    TR --> CTX
+
+    SSE -.->|"used by"| TR
+    WS -.->|"used by"| TR
+    GRPC -.->|"used by"| TR
+
+    style SSE fill:#4a90d9,color:#fff
+    style WS fill:#4a90d9,color:#fff
+    style GRPC fill:#4a90d9,color:#fff
+    style WH fill:#7b68ee,color:#fff
+    style HTTP fill:#e67e22,color:#fff
+    style TR fill:#27ae60,color:#fff

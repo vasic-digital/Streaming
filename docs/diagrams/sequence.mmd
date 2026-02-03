@@ -1,0 +1,83 @@
+sequenceDiagram
+    participant Browser as Browser / Client
+    participant Server as HTTP Server
+    participant Broker as SSE Broker
+    participant HB as Heartbeat Loop
+    participant Publisher as Event Publisher
+
+    Note over Broker, HB: Broker created with NewBroker(config)
+    Broker->>HB: Start heartbeat goroutine
+
+    Browser->>Server: GET /events<br/>Accept: text/event-stream<br/>X-Client-ID: client-1<br/>Last-Event-ID: 42
+    Server->>Broker: AddClient(w, r)
+
+    alt Max clients reached
+        Broker-->>Server: error: maximum client limit
+        Server-->>Browser: HTTP 503 Service Unavailable
+    else Streaming unsupported
+        Broker-->>Server: error: streaming unsupported
+        Server-->>Browser: HTTP 503 Service Unavailable
+    else Success
+        Broker->>Broker: Create Client{ID, Channel, LastEventID}
+        Broker->>Broker: Register client in map
+        Broker-->>Server: Set headers:<br/>Content-Type: text/event-stream<br/>Cache-Control: no-cache<br/>Connection: keep-alive<br/>X-Accel-Buffering: no
+        Broker->>Broker: Start streaming goroutine
+        Broker->>Broker: Start disconnect watcher goroutine
+        Broker-->>Server: Return *Client
+        Server-->>Browser: HTTP 200 (streaming)
+    end
+
+    Note over Browser, Publisher: Connection established, streaming active
+
+    loop Heartbeat Interval (default 30s)
+        HB->>Broker: Broadcast heartbeat Event
+        Broker->>Broker: Format Event to SSE wire format
+        Broker->>Browser: event: heartbeat\ndata: {"type":"heartbeat"}\n\n
+    end
+
+    Publisher->>Broker: Broadcast(&Event{ID:"43", Type:"update", Data:...})
+    Broker->>Broker: event.Format() -> SSE wire bytes
+    loop For each client
+        alt Client buffer has space
+            Broker->>Browser: id: 43\nevent: update\ndata: ...\n\n
+        else Client buffer full
+            Broker->>Broker: Skip client (non-blocking)
+        end
+    end
+
+    Publisher->>Broker: SendTo("client-1", &Event{...})
+    alt Client found and buffer has space
+        Broker->>Browser: data: ...\n\n
+        Broker-->>Publisher: nil
+    else Client not found
+        Broker-->>Publisher: error: client not found
+    else Client buffer full
+        Broker-->>Publisher: error: client channel full
+    end
+
+    Note over Browser: Browser disconnects or navigates away
+
+    Browser->>Server: Connection closed
+    Server->>Broker: r.Context().Done()
+    Broker->>Broker: RemoveClient("client-1")
+    Broker->>Broker: Close client channel
+    Broker->>Broker: Delete from clients map
+    Broker->>Broker: Decrement client count
+
+    Note over Browser: Browser reconnects with Last-Event-ID
+
+    Browser->>Server: GET /events<br/>Last-Event-ID: 43
+    Server->>Broker: AddClient(w, r)
+    Broker->>Broker: Create Client{LastEventID: "43"}
+
+    Note over Broker: Application shutdown
+
+    Publisher->>Broker: Close()
+    Broker->>HB: Cancel context
+    HB->>HB: Exit heartbeat loop
+    Broker->>Broker: Wait for goroutines (WaitGroup)
+    loop For each remaining client
+        Broker->>Broker: Close client channel
+        Broker->>Broker: Delete from map
+    end
+    Broker->>Broker: Reset client count to 0
