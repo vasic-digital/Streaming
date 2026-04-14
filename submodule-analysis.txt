@@ -1,0 +1,8 @@
+Commit: 5016224aedf014e4406809e3b9eee9ec15a3616b
+Branch: main
+5016224 fix(transport): channelTransport Send/Close race + use done channel pattern
+8ddbadc MANDATORY: Add ZERO UNFINISHED WORK POLICY to AGENTS.md
+563dff2 Add GitHub Sponsors button for vasic-digital
+1ed2011 security: Add mandatory NO SUDO/ROOT execution constraint
+37a313b feat: v2.2.0 comprehensive completion — edge tests, version alignment
+
