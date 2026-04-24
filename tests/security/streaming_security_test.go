@@ -16,7 +16,7 @@ import (
 
 func TestSecurity_SSE_NilData(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping security test in short mode")
+		t.Skip("skipping security test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	// Event with nil data should not panic
@@ -33,7 +33,7 @@ func TestSecurity_SSE_NilData(t *testing.T) {
 
 func TestSecurity_SSE_LargePayload(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping security test in short mode")
+		t.Skip("skipping security test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	// Very large SSE payload should not crash
@@ -50,7 +50,7 @@ func TestSecurity_SSE_LargePayload(t *testing.T) {
 
 func TestSecurity_SSE_SpecialCharactersInEvent(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping security test in short mode")
+		t.Skip("skipping security test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	// SSE spec: data with newlines should be split, but our implementation
@@ -75,7 +75,7 @@ func TestSecurity_SSE_SpecialCharactersInEvent(t *testing.T) {
 
 func TestSecurity_SSE_MaxClientLimit(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping security test in short mode")
+		t.Skip("skipping security test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	broker := sse.NewBroker(&sse.Config{
@@ -91,7 +91,7 @@ func TestSecurity_SSE_MaxClientLimit(t *testing.T) {
 
 func TestSecurity_Transport_NilConfig(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping security test in short mode")
+		t.Skip("skipping security test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	factory := transport.NewFactory()
@@ -102,7 +102,7 @@ func TestSecurity_Transport_NilConfig(t *testing.T) {
 
 func TestSecurity_Transport_EmptyType(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping security test in short mode")
+		t.Skip("skipping security test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	factory := transport.NewFactory()
@@ -116,7 +116,7 @@ func TestSecurity_Transport_EmptyType(t *testing.T) {
 
 func TestSecurity_Transport_DoubleClose(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping security test in short mode")
+		t.Skip("skipping security test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	factory := transport.NewFactory()
@@ -137,7 +137,7 @@ func TestSecurity_Transport_DoubleClose(t *testing.T) {
 
 func TestSecurity_Transport_SendAfterClose(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping security test in short mode")
+		t.Skip("skipping security test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	factory := transport.NewFactory()
@@ -156,7 +156,7 @@ func TestSecurity_Transport_SendAfterClose(t *testing.T) {
 
 func TestSecurity_Webhook_EmptySecret(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping security test in short mode")
+		t.Skip("skipping security test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	// Sign with empty secret should still work (HMAC with empty key)
@@ -168,7 +168,7 @@ func TestSecurity_Webhook_EmptySecret(t *testing.T) {
 
 func TestSecurity_Webhook_EmptyPayload(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping security test in short mode")
+		t.Skip("skipping security test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	sig := webhook.Sign([]byte{}, "secret")
@@ -181,7 +181,7 @@ func TestSecurity_Webhook_EmptyPayload(t *testing.T) {
 
 func TestSecurity_Webhook_InactiveWebhookRejection(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping security test in short mode")
+		t.Skip("skipping security test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	dispatcher := webhook.NewDispatcher(&webhook.DispatcherConfig{
@@ -211,7 +211,7 @@ func TestSecurity_Webhook_InactiveWebhookRejection(t *testing.T) {
 
 func TestSecurity_Webhook_RegistryNonExistent(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping security test in short mode")
+		t.Skip("skipping security test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	registry := webhook.NewRegistry()
