@@ -102,12 +102,18 @@ func (f *Factory) SupportedTypes() []Type {
 
 // channelTransport is a channel-based Transport implementation
 // used for in-process communication and testing.
+//
+// Concurrency contract: sendCh and recvCh are NEVER closed.
+// Closure is signalled exclusively via the done channel so that
+// concurrent Send / Receive goroutines can select on <-done without
+// risking a send-on-closed-channel panic.
 type channelTransport struct {
 	config  *Config
 	sendCh  chan []byte
 	recvCh  chan []byte
-	closed  bool
+	done    chan struct{}
 	closeMu sync.Mutex
+	closed  bool
 }
 
 // newChannelTransport creates a new channel-based transport.
@@ -125,21 +131,29 @@ func newChannelTransport(config *Config) (Transport, error) {
 		config: config,
 		sendCh: make(chan []byte, bufSize),
 		recvCh: make(chan []byte, bufSize),
+		done:   make(chan struct{}),
 	}, nil
 }
 
 // Send sends data through the channel transport.
+// It returns an error if the transport is already closed, if the
+// context is cancelled, or if Close is called while Send is waiting.
 func (t *channelTransport) Send(ctx context.Context, data []byte) error {
+	// Fast-path: already closed.
 	t.closeMu.Lock()
-	if t.closed {
-		t.closeMu.Unlock()
+	closed := t.closed
+	t.closeMu.Unlock()
+	if closed {
 		return fmt.Errorf("transport is closed")
 	}
-	t.closeMu.Unlock()
 
+	// Select races ctx, done, and the buffered channel. sendCh is never
+	// closed so there is no risk of a send-on-closed-channel panic.
 	select {
 	case t.sendCh <- data:
 		return nil
+	case <-t.done:
+		return fmt.Errorf("transport is closed")
 	case <-ctx.Done():
 		return fmt.Errorf("send cancelled: %w", ctx.Err())
 	}
@@ -147,22 +161,26 @@ func (t *channelTransport) Send(ctx context.Context, data []byte) error {
 
 // Receive receives data from the channel transport.
 func (t *channelTransport) Receive(ctx context.Context) ([]byte, error) {
+	// Fast-path: already closed.
 	t.closeMu.Lock()
-	if t.closed {
-		t.closeMu.Unlock()
+	closed := t.closed
+	t.closeMu.Unlock()
+	if closed {
 		return nil, fmt.Errorf("transport is closed")
 	}
-	t.closeMu.Unlock()
 
 	select {
 	case data := <-t.recvCh:
 		return data, nil
+	case <-t.done:
+		return nil, fmt.Errorf("transport is closed")
 	case <-ctx.Done():
 		return nil, fmt.Errorf("receive cancelled: %w", ctx.Err())
 	}
 }
 
-// Close closes the channel transport.
+// Close closes the channel transport. It is safe to call from multiple
+// goroutines; only the first call has any effect.
 func (t *channelTransport) Close() error {
 	t.closeMu.Lock()
 	defer t.closeMu.Unlock()
@@ -172,8 +190,7 @@ func (t *channelTransport) Close() error {
 	}
 
 	t.closed = true
-	close(t.sendCh)
-	close(t.recvCh)
+	close(t.done) // unblocks any in-flight Send / Receive
 	return nil
 }
 

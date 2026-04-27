@@ -18,7 +18,7 @@ import (
 
 func TestStress_ConcurrentSSEBroadcast(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping stress test in short mode")
+		t.Skip("skipping stress test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	broker := sse.NewBroker(&sse.Config{
@@ -51,7 +51,7 @@ func TestStress_ConcurrentSSEBroadcast(t *testing.T) {
 
 func TestStress_ConcurrentTransportSend(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping stress test in short mode")
+		t.Skip("skipping stress test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	factory := transport.NewFactory()
@@ -87,7 +87,7 @@ func TestStress_ConcurrentTransportSend(t *testing.T) {
 
 func TestStress_ConcurrentWebhookSignVerify(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping stress test in short mode")
+		t.Skip("skipping stress test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	const goroutines = 100
@@ -116,7 +116,7 @@ func TestStress_ConcurrentWebhookSignVerify(t *testing.T) {
 
 func TestStress_ConcurrentRegistryOperations(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping stress test in short mode")
+		t.Skip("skipping stress test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	registry := webhook.NewRegistry()
@@ -160,7 +160,7 @@ func TestStress_ConcurrentRegistryOperations(t *testing.T) {
 
 func TestStress_ConcurrentTransportCreateClose(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping stress test in short mode")
+		t.Skip("skipping stress test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	factory := transport.NewFactory()
@@ -197,7 +197,7 @@ func TestStress_ConcurrentTransportCreateClose(t *testing.T) {
 
 func TestStress_ConcurrentSSEEventFormatting(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping stress test in short mode")
+		t.Skip("skipping stress test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	const goroutines = 100
@@ -226,7 +226,7 @@ func TestStress_ConcurrentSSEEventFormatting(t *testing.T) {
 
 func TestStress_HighVolumeWebhookMatching(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping stress test in short mode")
+		t.Skip("skipping stress test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	registry := webhook.NewRegistry()

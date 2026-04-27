@@ -15,7 +15,7 @@ import (
 
 func TestSSE_EventFormatting_Integration(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip("skipping integration test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	event := &sse.Event{
@@ -31,7 +31,7 @@ func TestSSE_EventFormatting_Integration(t *testing.T) {
 
 func TestSSE_EventWithRetry_Integration(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip("skipping integration test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	event := &sse.Event{
@@ -50,7 +50,7 @@ func TestSSE_EventWithRetry_Integration(t *testing.T) {
 
 func TestSSE_BrokerLifecycle_Integration(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip("skipping integration test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	broker := sse.NewBroker(&sse.Config{
@@ -68,7 +68,7 @@ func TestSSE_BrokerLifecycle_Integration(t *testing.T) {
 
 func TestTransport_FactoryLifecycle_Integration(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip("skipping integration test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	factory := transport.NewFactory()
@@ -99,7 +99,7 @@ func TestTransport_FactoryLifecycle_Integration(t *testing.T) {
 
 func TestTransport_WebSocketType_Integration(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip("skipping integration test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	factory := transport.NewFactory()
@@ -120,7 +120,7 @@ func TestTransport_WebSocketType_Integration(t *testing.T) {
 
 func TestTransport_GRPCType_Integration(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip("skipping integration test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	factory := transport.NewFactory()
@@ -141,7 +141,7 @@ func TestTransport_GRPCType_Integration(t *testing.T) {
 
 func TestTransport_UnsupportedType_Integration(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip("skipping integration test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	factory := transport.NewFactory()
@@ -156,7 +156,7 @@ func TestTransport_UnsupportedType_Integration(t *testing.T) {
 
 func TestWebhook_SignVerify_Integration(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip("skipping integration test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	secret := "my-webhook-secret-key"
@@ -179,7 +179,7 @@ func TestWebhook_SignVerify_Integration(t *testing.T) {
 
 func TestWebhook_RegistryLifecycle_Integration(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip("skipping integration test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	registry := webhook.NewRegistry()

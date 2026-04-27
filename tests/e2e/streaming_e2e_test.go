@@ -16,7 +16,7 @@ import (
 
 func TestEndToEnd_SSEBrokerBroadcast(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping e2e test in short mode")
+		t.Skip("skipping e2e test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	broker := sse.NewBroker(&sse.Config{
@@ -37,7 +37,7 @@ func TestEndToEnd_SSEBrokerBroadcast(t *testing.T) {
 
 func TestEndToEnd_SSEEventTypes(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping e2e test in short mode")
+		t.Skip("skipping e2e test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	testCases := []struct {
@@ -74,7 +74,7 @@ func TestEndToEnd_SSEEventTypes(t *testing.T) {
 
 func TestEndToEnd_TransportFactory(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping e2e test in short mode")
+		t.Skip("skipping e2e test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	factory := transport.NewFactory()
@@ -107,7 +107,7 @@ func TestEndToEnd_TransportFactory(t *testing.T) {
 
 func TestEndToEnd_TransportCustomRegistration(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping e2e test in short mode")
+		t.Skip("skipping e2e test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	factory := transport.NewFactory()
@@ -140,7 +140,7 @@ func TestEndToEnd_TransportCustomRegistration(t *testing.T) {
 
 func TestEndToEnd_WebhookRegistryMatching(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping e2e test in short mode")
+		t.Skip("skipping e2e test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	registry := webhook.NewRegistry()
@@ -180,7 +180,7 @@ func TestEndToEnd_WebhookRegistryMatching(t *testing.T) {
 
 func TestEndToEnd_WebhookDispatcherStats(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping e2e test in short mode")
+		t.Skip("skipping e2e test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	dispatcher := webhook.NewDispatcher(&webhook.DispatcherConfig{
@@ -199,7 +199,7 @@ func TestEndToEnd_WebhookDispatcherStats(t *testing.T) {
 
 func TestEndToEnd_TransportContextCancellation(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping e2e test in short mode")
+		t.Skip("skipping e2e test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	factory := transport.NewFactory()
@@ -222,7 +222,7 @@ func TestEndToEnd_TransportContextCancellation(t *testing.T) {
 
 func TestEndToEnd_WebhookSignatureChain(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping e2e test in short mode")
+		t.Skip("skipping e2e test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	// Verify sign/verify consistency across multiple payloads
