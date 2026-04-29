@@ -17,6 +17,7 @@ import (
 )
 
 func TestStress_ConcurrentSSEBroadcast(t *testing.T) {
+	// bluff-scan: no-assert-ok (concurrency test — go test -race catches data races; absence of panic == correctness)
 	if testing.Short() {
 		t.Skip("skipping stress test in short mode")  // SKIP-OK: #short-mode
 	}

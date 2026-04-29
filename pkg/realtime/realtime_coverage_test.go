@@ -45,6 +45,7 @@ func TestNoopLogger_Debug_Coverage(t *testing.T) {
 // TestNoopLogger_WithArgs_Coverage verifies the noopLogger methods accept
 // variadic key-value arguments without panicking.
 func TestNoopLogger_WithArgs_Coverage(t *testing.T) {
+	// bluff-scan: no-assert-ok (null-implementation smoke — no-op type must accept all interface calls without panic)
 	n := &noopLogger{}
 
 	n.Info("msg", "key1", "value1", "key2", 42)
