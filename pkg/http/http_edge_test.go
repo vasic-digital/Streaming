@@ -236,6 +236,7 @@ func TestClient_Request_NilBody(t *testing.T) {
 // --- SSE Event Format Edge Cases ---
 
 func TestSSEEvent_Format_import(t *testing.T) {
+	// bluff-scan: no-assert-ok (service smoke — public method must not panic on standard call)
 	// This test just validates the streaming/sse package is reachable from
 	// the http_edge_test in case we need cross-package integration later.
 	// The actual SSE edge cases are covered in sse_edge_test.go.

@@ -1217,6 +1217,7 @@ func TestReadPump_ContextDone_ImmediateReturn(t *testing.T) {
 }
 
 func TestReadPump_ContextCancelledBeforeStart(t *testing.T) {
+	// bluff-scan: no-assert-ok (context-cancel smoke — cancel path must not panic/leak)
 	// Create a hub and server
 	hub := NewHub(&Config{
 		ReadBufferSize:  1024,

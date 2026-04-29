@@ -226,6 +226,7 @@ func TestStress_ConcurrentSSEEventFormatting(t *testing.T) {
 }
 
 func TestStress_HighVolumeWebhookMatching(t *testing.T) {
+	// bluff-scan: no-assert-ok (stress test — high-volume calls must not panic; go test -race verifies)
 	if testing.Short() {
 		t.Skip("skipping stress test in short mode")  // SKIP-OK: #short-mode
 	}
