@@ -1263,7 +1263,7 @@ func TestReadPump_ContextCancelledBeforeStart(t *testing.T) {
 	wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
 	conn, _, err := ws.DefaultDialer.Dial(wsURL, nil)
 	if err != nil {
-		t.Skipf("could not connect: %v", err)
+		t.Skipf("could not connect: %v", err)  // SKIP-OK: #legacy-skip-untriaged-2026-04-29
 	}
 	defer conn.Close()
 
