@@ -245,7 +245,7 @@ func (d *Debouncer) flush() {
 // noopLogger is a Logger that discards all messages.
 type noopLogger struct{}
 
-func (n *noopLogger) Info(_ string, _ ...interface{})  {}
-func (n *noopLogger) Warn(_ string, _ ...interface{})  {}
-func (n *noopLogger) Error(_ string, _ ...interface{}) {}
-func (n *noopLogger) Debug(_ string, _ ...interface{}) {}
+func (n *noopLogger) Info(_ string, _ ...interface{})  {} // intentionally empty: noop logger discards all messages
+func (n *noopLogger) Warn(_ string, _ ...interface{})  {} // intentionally empty: noop logger discards all messages
+func (n *noopLogger) Error(_ string, _ ...interface{}) {} // intentionally empty: noop logger discards all messages
+func (n *noopLogger) Debug(_ string, _ ...interface{}) {} // intentionally empty: noop logger discards all messages
