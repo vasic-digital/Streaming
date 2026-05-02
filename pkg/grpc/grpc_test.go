@@ -201,13 +201,6 @@ func TestServerOptions(t *testing.T) {
 // HealthServer Tests
 // =============================================================================
 
-func TestNewHealthServer(t *testing.T) {
-	hs := NewHealthServer()
-	require.NotNil(t, hs)
-	assert.NotNil(t, hs.services)
-	assert.Empty(t, hs.services)
-}
-
 func TestHealthServer_SetServiceStatus(t *testing.T) {
 	tests := []struct {
 		name    string

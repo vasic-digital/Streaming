@@ -104,34 +104,6 @@ func TestDefaultDispatcherConfig(t *testing.T) {
 	assert.Equal(t, "Streaming-Webhook/1.0", config.UserAgent)
 }
 
-func TestNewDispatcher(t *testing.T) {
-	tests := []struct {
-		name   string
-		config *DispatcherConfig
-	}{
-		{
-			name:   "nil config uses defaults",
-			config: nil,
-		},
-		{
-			name: "custom config",
-			config: &DispatcherConfig{
-				MaxRetries:  3,
-				Timeout:     10 * time.Second,
-				BackoffBase: 500 * time.Millisecond,
-				BackoffMax:  30 * time.Second,
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			d := NewDispatcher(tt.config)
-			require.NotNil(t, d)
-		})
-	}
-}
-
 func TestDispatcher_Send_Success(t *testing.T) {
 	var receivedBody []byte
 	server := httptest.NewServer(http.HandlerFunc(

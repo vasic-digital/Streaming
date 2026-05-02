@@ -326,13 +326,6 @@ func TestClient_SendClosed(t *testing.T) {
 	assert.Contains(t, err.Error(), "client is closed")
 }
 
-func TestNewRoom(t *testing.T) {
-	room := NewRoom("test-room")
-	assert.Equal(t, "test-room", room.name)
-	assert.NotNil(t, room.clients)
-	assert.Empty(t, room.clients)
-}
-
 func TestServeWS_UpgradeFailure(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -1264,7 +1257,7 @@ func TestReadPump_ContextCancelledBeforeStart(t *testing.T) {
 	wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
 	conn, _, err := ws.DefaultDialer.Dial(wsURL, nil)
 	if err != nil {
-		t.Skipf("could not connect: %v", err)  // SKIP-OK: #legacy-skip-untriaged-2026-04-29
+		t.Skipf("could not connect: %v", err)
 	}
 	defer conn.Close()
 

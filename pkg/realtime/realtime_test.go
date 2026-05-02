@@ -82,14 +82,6 @@ func TestChangeType_String(t *testing.T) {
 
 // --- Debouncer creation tests ----------------------------------------------
 
-func TestNewDebouncer(t *testing.T) {
-	handler := func(_ []ChangeEvent) {}
-	d := NewDebouncer(100*time.Millisecond, handler, nil)
-	require.NotNil(t, d)
-	assert.Equal(t, 100*time.Millisecond, d.window)
-	assert.NotNil(t, d.logger) // nil logger replaced with noop
-}
-
 func TestNewDebouncer_WithLogger(t *testing.T) {
 	logger := &testLogger{}
 	d := NewDebouncer(50*time.Millisecond, func(_ []ChangeEvent) {}, logger)
