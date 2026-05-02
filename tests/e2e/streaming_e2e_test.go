@@ -1,5 +1,10 @@
 package e2e
 
+// BLUFF-VIOLATION: R-12 — This E2E test uses mockTransport.
+// Mocks are permitted ONLY in Unit tests per Constitution §6 / R-12.
+// Remediation: Replace with real WebRTC/QUIC transport between containerized endpoints.
+// Tracked in: docs/research/chapters/MVP/05_Response/anti_bluff_audit_2026-05-02.md
+
 import (
 	"context"
 	"fmt"
