@@ -6,7 +6,44 @@ import (
 	"context"
 	"fmt"
 	"sync"
+
+	"digital.vasic.streaming/pkg/i18n"
 )
+
+// translator holds the package-level Translator used to source
+// user-facing error message text per CONST-046 (no-hardcoded-content).
+// Defaults to i18n.NoopTranslator{} (returns message ID verbatim,
+// preserving anti-bluff visibility in captured wire traffic per
+// CONST-035 / Article XI §11.9). Consuming projects wire a real
+// implementation via SetTranslator. The package-level approach is
+// used here rather than a Config field because Factory.Create
+// receives a per-call *Config that may originate from arbitrary
+// untranslated sources; the package-level slot keeps the
+// CONST-051(B) decoupling invariant without forcing every caller
+// to thread a Translator through their own Config plumbing.
+var (
+	translator   i18n.Translator = i18n.NoopTranslator{}
+	translatorMu sync.RWMutex
+)
+
+// SetTranslator wires the package-level Translator. Pass nil to
+// reset to the NoopTranslator default. Safe for concurrent use.
+func SetTranslator(t i18n.Translator) {
+	translatorMu.Lock()
+	defer translatorMu.Unlock()
+	if t == nil {
+		translator = i18n.NoopTranslator{}
+		return
+	}
+	translator = t
+}
+
+// getTranslator returns the active Translator.
+func getTranslator() i18n.Translator {
+	translatorMu.RLock()
+	defer translatorMu.RUnlock()
+	return translator
+}
 
 // Type represents the transport protocol type.
 type Type string
@@ -74,7 +111,8 @@ func (f *Factory) Register(
 // Create creates a new Transport for the given configuration.
 func (f *Factory) Create(config *Config) (Transport, error) {
 	if config == nil {
-		return nil, fmt.Errorf("config is required")
+		return nil, fmt.Errorf("%s", getTranslator().T(
+			context.Background(), "streaming_transport_config_required", nil))
 	}
 
 	f.mu.RLock()

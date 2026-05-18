@@ -10,6 +10,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"digital.vasic.streaming/pkg/i18n"
 )
 
 // Event represents a Server-Sent Event.
@@ -62,6 +64,11 @@ type Config struct {
 	HeartbeatInterval time.Duration
 	// MaxClients is the maximum number of concurrent clients.
 	MaxClients int
+	// Translator sources the user-facing error message text per
+	// CONST-046 (no-hardcoded-content). Defaults to i18n.NoopTranslator{}
+	// (returns message ID verbatim, preserving anti-bluff visibility in
+	// captured wire traffic per CONST-035 / Article XI §11.9).
+	Translator i18n.Translator
 }
 
 // DefaultConfig returns a Config with sensible defaults.
@@ -93,6 +100,9 @@ func NewBroker(config *Config) *Broker {
 	if config == nil {
 		config = DefaultConfig()
 	}
+	if config.Translator == nil {
+		config.Translator = i18n.NoopTranslator{}
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -114,12 +124,15 @@ func NewBroker(config *Config) *Broker {
 func (b *Broker) AddClient(w http.ResponseWriter, r *http.Request) (*Client, error) {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
-		return nil, fmt.Errorf("streaming unsupported by response writer")
+		return nil, fmt.Errorf("%s", b.config.Translator.T(
+			r.Context(), "streaming_sse_unsupported_writer", nil))
 	}
 
 	if b.config.MaxClients > 0 &&
 		int(b.clientCount.Load()) >= b.config.MaxClients {
-		return nil, fmt.Errorf("maximum client limit reached: %d", b.config.MaxClients)
+		return nil, fmt.Errorf("%s: %d", b.config.Translator.T(
+			r.Context(), "streaming_sse_max_clients_reached", nil),
+			b.config.MaxClients)
 	}
 
 	clientID := r.Header.Get("X-Client-ID")

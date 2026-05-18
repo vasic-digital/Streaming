@@ -11,6 +11,8 @@ import (
 	"time"
 
 	ws "github.com/gorilla/websocket"
+
+	"digital.vasic.streaming/pkg/i18n"
 )
 
 // Message represents a WebSocket message.
@@ -34,6 +36,11 @@ type Config struct {
 	WriteWait       time.Duration
 	MaxMessageSize  int64
 	AllowedOrigins  []string
+	// Translator sources the user-facing error message text per
+	// CONST-046 (no-hardcoded-content). Defaults to i18n.NoopTranslator{}
+	// (returns message ID verbatim, preserving anti-bluff visibility in
+	// captured wire traffic per CONST-035 / Article XI §11.9).
+	Translator i18n.Translator
 }
 
 // DefaultConfig returns a Config with sensible defaults.
@@ -70,16 +77,30 @@ func (c *Client) Send(data []byte) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	tr := c.translator()
 	if c.closed {
-		return fmt.Errorf("client is closed")
+		return fmt.Errorf("%s", tr.T(context.Background(),
+			"streaming_websocket_client_closed", nil))
 	}
 
 	select {
 	case c.send <- data:
 		return nil
 	default:
-		return fmt.Errorf("client send buffer full")
+		return fmt.Errorf("%s", tr.T(context.Background(),
+			"streaming_websocket_send_buffer_full", nil))
 	}
+}
+
+// translator returns the Translator wired on the owning Hub's Config,
+// falling back to the NoopTranslator when no hub or no Translator is
+// configured (preserves the standalone-reusability invariant per
+// CONST-051(B)).
+func (c *Client) translator() i18n.Translator {
+	if c.hub != nil && c.hub.config != nil && c.hub.config.Translator != nil {
+		return c.hub.config.Translator
+	}
+	return i18n.NoopTranslator{}
 }
 
 // Close closes the client connection.
@@ -213,6 +234,9 @@ type Hub struct {
 func NewHub(config *Config) *Hub {
 	if config == nil {
 		config = DefaultConfig()
+	}
+	if config.Translator == nil {
+		config.Translator = i18n.NoopTranslator{}
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())

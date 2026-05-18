@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Milos Vasic
+#
+# Streaming active English bundle.
+# Message IDs are prefixed `streaming_` for namespace clarity when
+# bundled alongside other vasic-digital library surfaces.
+#
+# CONST-046 (no-hardcoded-content) lineage:
+# - Round 126 (2026-05-18) migrated the first batch of user-facing
+#   error literals embedded in the sse / websocket / transport packages
+#   per the i18n kickoff pattern shared across the HelixCode Phase 4
+#   sweep (DocProcessor / VectorDB / MCP_Module / Messaging / Lazy /
+#   Storage / VisionEngine / LLMOrch / HelixSpecifier / Middleware /
+#   Plugins siblings).
+#
+# Placeholders use `{{.name}}` style; consuming Translator
+# implementations may pick any template engine compatible with that
+# arg map.
+streaming_sse_unsupported_writer: "Streaming is not supported by the response writer."
+streaming_sse_max_clients_reached: "Maximum streaming client limit has been reached."
+streaming_websocket_client_closed: "The WebSocket client connection is closed."
+streaming_websocket_send_buffer_full: "The WebSocket client send buffer is full."
+streaming_transport_config_required: "Transport configuration is required."

@@ -323,7 +323,9 @@ func TestClient_SendClosed(t *testing.T) {
 
 	err := client.Send([]byte("hello"))
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "client is closed")
+	// Migrated to i18n msgID under default NoopTranslator per CONST-046
+	// round-126 kickoff.
+	assert.Contains(t, err.Error(), "streaming_websocket_client_closed")
 }
 
 func TestServeWS_UpgradeFailure(t *testing.T) {
@@ -494,7 +496,9 @@ func TestClient_SendBufferFull(t *testing.T) {
 	// Next send should fail with buffer full
 	err = client.Send([]byte("second"))
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "send buffer full")
+	// Migrated to i18n msgID under default NoopTranslator per CONST-046
+	// round-126 kickoff.
+	assert.Contains(t, err.Error(), "streaming_websocket_send_buffer_full")
 }
 
 func TestClient_CloseIdempotent(t *testing.T) {

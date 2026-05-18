@@ -842,7 +842,9 @@ func TestBroker_AddClient_NoFlusher(t *testing.T) {
 	client, err := broker.AddClient(w, r)
 	assert.Nil(t, client)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "streaming unsupported")
+	// Migrated to i18n msgID under default NoopTranslator per CONST-046
+	// round-126 kickoff.
+	assert.Contains(t, err.Error(), "streaming_sse_unsupported_writer")
 }
 
 func TestBroker_AddClient_MaxClientsReached(t *testing.T) {
@@ -871,7 +873,11 @@ func TestBroker_AddClient_MaxClientsReached(t *testing.T) {
 	client, err := broker.AddClient(w, r)
 	assert.Nil(t, client)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "maximum client limit reached")
+	// Migrated to i18n msgID under default NoopTranslator per CONST-046
+	// round-126 kickoff; old "maximum client limit reached" literal
+	// replaced by the namespaced ID (still positive runtime evidence
+	// per CONST-035 / Article XI §11.9).
+	assert.Contains(t, err.Error(), "streaming_sse_max_clients_reached")
 }
 
 func TestBroker_AddClient_Success(t *testing.T) {
@@ -1106,7 +1112,9 @@ func TestBroker_ServeHTTP_NoFlusher(t *testing.T) {
 	broker.ServeHTTP(w, r)
 
 	assert.Equal(t, http.StatusServiceUnavailable, w.status)
-	assert.Contains(t, string(w.body), "streaming unsupported")
+	// Migrated to i18n msgID under default NoopTranslator per CONST-046
+	// round-126 kickoff.
+	assert.Contains(t, string(w.body), "streaming_sse_unsupported_writer")
 }
 
 func TestBroker_ServeHTTP_MaxClients(t *testing.T) {
@@ -1132,7 +1140,9 @@ func TestBroker_ServeHTTP_MaxClients(t *testing.T) {
 	broker.ServeHTTP(recorder, r)
 
 	assert.Equal(t, http.StatusServiceUnavailable, recorder.Code)
-	assert.Contains(t, recorder.Body.String(), "maximum client limit")
+	// Migrated to i18n msgID under default NoopTranslator per CONST-046
+	// round-126 kickoff.
+	assert.Contains(t, recorder.Body.String(), "streaming_sse_max_clients_reached")
 }
 
 func TestBroker_ServeHTTP_Success(t *testing.T) {

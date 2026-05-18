@@ -54,7 +54,9 @@ func TestFactory_Create(t *testing.T) {
 			name:      "nil config",
 			config:    nil,
 			expectErr: true,
-			errMsg:    "config is required",
+			// Migrated to i18n msgID under default NoopTranslator per
+			// CONST-046 round-126 kickoff.
+			errMsg: "streaming_transport_config_required",
 		},
 		{
 			name: "unsupported type",

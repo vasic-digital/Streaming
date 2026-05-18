@@ -150,7 +150,9 @@ func TestFactory_NilConfig(t *testing.T) {
 	f := transport.NewFactory()
 	_, err := f.Create(nil)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "config is required")
+	// Migrated to i18n msgID under default NoopTranslator per CONST-046
+	// round-126 kickoff.
+	assert.Contains(t, err.Error(), "streaming_transport_config_required")
 }
 
 func TestFactory_ConcurrentRegisterAndCreate(t *testing.T) {
