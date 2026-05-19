@@ -265,6 +265,75 @@ The Streaming module is used throughout HelixAgent for real-time communication:
 
 The internal adapter at `internal/adapters/streaming/` bridges these generic types to HelixAgent-specific interfaces.
 
+## Anti-Bluff Guarantees (Round 284 — 2026-05-19)
+
+Per Article XI §11.9 (Anti-Bluff Forensic Anchor) and CONST-050(A)
+(No-Fakes-Beyond-Unit-Tests), this module ships a runtime-evidence
+Challenge runner under `challenges/runner/` that exercises the
+public surface of every package against **real implementations**
+(no mocks, no stubs, no placeholders) and emits the proof on stdout.
+
+### What the runner actually exercises
+
+The runner (`challenges/runner/main.go`) drives five components and
+refuses to PASS if any one is absent from its closed plan:
+
+1. **SSE broker** — spins a real `httptest.Server` around `sse.Broker`,
+   connects a real HTTP client, broadcasts a real `*sse.Event`, and
+   asserts the bytes hit the wire (not just that `Broadcast()` did
+   not error).
+2. **Webhook sign/verify** — uses `webhook.Sign` + `webhook.Verify`
+   against a real HMAC-SHA256 payload; mutates one byte and asserts
+   `Verify` rejects the tampered payload.
+3. **HTTP circuit breaker** — drives `streaminghttp.Client` against
+   a real failing `httptest.Server` returning HTTP 500 and asserts
+   the breaker transitions `Closed → Open` after the threshold.
+4. **Transport factory** — constructs a real `transport.Factory` and
+   asserts `SupportedTypes()` returns a non-empty closed set.
+5. **Realtime debouncer** — pushes two `Notify` calls inside one
+   debounce window and asserts the handler receives one batch.
+
+### Running the Challenge
+
+```bash
+# Positive-evidence mode (default): exit 0 on success.
+./challenges/streaming_describe_challenge.sh
+
+# Paired-mutation mode: builds a scratch breaker whose Trip() is
+# intentionally broken; asserts the runner-style invariant catches
+# it (exit 99 = mutation surfaced = Challenge is honest).
+./challenges/streaming_describe_challenge.sh --mutate
+```
+
+### Anti-bluff dimensions
+
+| Dimension                              | Where proved                                                  |
+|----------------------------------------|---------------------------------------------------------------|
+| Real I/O (no mocks beyond unit tests)  | `httptest.Server`, real HMAC, real timer-window aggregation.  |
+| Wire-level observable behaviour        | SSE bytes read off socket; tamper byte mutated and rejected.  |
+| Closed-set coverage assertion          | Runner refuses PASS if `len(checks) != len(expectedComponents)`. |
+| 5-locale bilingual UX (CONST-046)      | `en / sr / ja / es / de` summary lines.                       |
+| Paired-mutation evidence (CONST-035)   | `--mutate` builds scratch breaker that fails to open.         |
+| Exit-code differentiation              | 2 = coverage gap; 3 = invariant; 4 = locale; 0 = honest PASS. |
+
+### Adding a new component
+
+Adding a new package to `pkg/<name>/` MUST include, in the same
+commit: (1) a new `checkX()` function in `challenges/runner/main.go`,
+(2) a new entry in `expectedComponents`, (3) a new row in
+`docs/test-coverage.md`, (4) a new line in
+`challenges/fixtures/locales.yaml` if the UX summary changes. Drift
+between these four artefacts is a CONST-048 coverage-gap violation.
+
+### Verification ledger
+
+`docs/test-coverage.md` is the authoritative symbol → test →
+Challenge → evidence table. Every exported symbol that the runner
+touches is listed there with the unit test that covers it, the
+runner component name that exercises it, the anti-bluff dimension
+it proves, and the exact stdout token to grep for in release-gate
+sweeps.
+
 ## License
 
 Proprietary.

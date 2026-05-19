@@ -34,3 +34,9 @@ coverage.out
 .env
 .env.local
 .env.*.local
+
+# Stray Challenge runner builds (CONST-053)
+/runner
+/mutbin
+challenges/runner/runner
+challenges/runner/mutbin

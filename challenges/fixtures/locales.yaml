@@ -1,0 +1,35 @@
+# challenges/fixtures/locales.yaml
+#
+# Round-284 5-locale UX evidence fixtures for digital.vasic.streaming.
+# Mirrors the strings emitted by challenges/runner/main.go so that
+# operator-facing localisation regressions surface as fixture drift
+# during code review, not as silent UX bluffs in production.
+#
+# Strings are summary-line templates; %d substitutions are filled at
+# runtime with (component_count, check_count). The runner is the
+# source of truth — this file is a reviewer-visible mirror per
+# CONST-046.
+
+schema_version: 1
+date_added: 2026-05-19
+notes: |
+  Strings describe what the runner did to operators reading the log.
+  They contain no implementation detail and no language-specific
+  technology references — only the canonical "streaming:" token plus
+  the (components × invariants) numbers.
+locales:
+  - tag: en
+    template: "[en] streaming: %d components exercised, %d invariants verified (real wires, not mocks)"
+    note: "English baseline — matches the canonical token 'streaming:' grepped by the Challenge."
+  - tag: sr
+    template: "[sr] streaming: %d komponenti pokrenuto, %d invarijanti potvrđeno (pravi protok, ne mokovi)"
+    note: "Serbian Latin — Cyrillic transliteration permitted; canonical token preserved."
+  - tag: ja
+    template: "[ja] streaming: %d 個のコンポーネントを実行、%d 個の不変条件を検証(実通信、モックなし)"
+    note: "Japanese — full-width comma + parens; 'real comms, no mocks' clause preserved."
+  - tag: es
+    template: "[es] streaming: %d componentes ejercitados, %d invariantes verificadas (conexiones reales, no mocks)"
+    note: "Spanish — neutral plural agreement; mirrors English structure."
+  - tag: de
+    template: "[de] streaming: %d Komponenten ausgeführt, %d Invarianten verifiziert (echte Verbindungen, keine Mocks)"
+    note: "German — compound nouns 'Komponenten/Invarianten'; defensive clause shortened."
