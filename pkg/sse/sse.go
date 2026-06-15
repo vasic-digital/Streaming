@@ -92,6 +92,12 @@ type Broker struct {
 	wg     sync.WaitGroup
 
 	clientCount atomic.Int64
+
+	// idCounter is a monotonic counter appended to fallback client IDs so
+	// concurrent connects without an X-Client-ID header never collide on the
+	// same nanosecond tick (HXC-086). time.Now().UnixNano() alone is not
+	// unique under concurrency.
+	idCounter atomic.Uint64
 }
 
 // NewBroker creates a new SSE Broker with the given configuration.
@@ -137,7 +143,12 @@ func (b *Broker) AddClient(w http.ResponseWriter, r *http.Request) (*Client, err
 
 	clientID := r.Header.Get("X-Client-ID")
 	if clientID == "" {
-		clientID = fmt.Sprintf("client-%d", time.Now().UnixNano())
+		// HXC-086: time.Now().UnixNano() is not unique under concurrency —
+		// two fallback connects on the same nanosecond tick produced an
+		// identical map key, silently overwriting (losing) a client. Append a
+		// monotonic atomic counter to guarantee uniqueness.
+		clientID = fmt.Sprintf("client-%d-%d",
+			time.Now().UnixNano(), b.idCounter.Add(1))
 	}
 
 	lastEventID := r.Header.Get("Last-Event-ID")
