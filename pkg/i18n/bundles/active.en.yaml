@@ -8,7 +8,7 @@
 # CONST-046 (no-hardcoded-content) lineage:
 # - Round 126 (2026-05-18) migrated the first batch of user-facing
 #   error literals embedded in the sse / websocket / transport packages
-#   per the i18n kickoff pattern shared across the HelixCode Phase 4
+#   per the i18n kickoff pattern shared across the project's Phase 4
 #   sweep (DocProcessor / VectorDB / MCP_Module / Messaging / Lazy /
 #   Storage / VisionEngine / LLMOrch / HelixSpecifier / Middleware /
 #   Plugins siblings).

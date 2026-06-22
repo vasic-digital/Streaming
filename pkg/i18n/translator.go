@@ -12,7 +12,7 @@
 // implementation that loads bundles, calls an LLM, or composes from
 // configuration at runtime.
 //
-// Round 126 of the HelixCode CONST-046 sweep introduced this contract
+// Round 126 of the project's CONST-046 sweep introduced this contract
 // to externalise the most-frequently-end-user-visible error literals
 // embedded across the sse / websocket / transport packages. Those
 // strings travel verbatim into HTTP/WebSocket error responses a real

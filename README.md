@@ -251,19 +251,19 @@ go test -tags=integration ./...    # Integration tests
 go test -bench=. ./...             # Benchmarks
 ```
 
-## Integration with HelixAgent
+## Integration with the consuming project
 
-The Streaming module is used throughout HelixAgent for real-time communication:
+The Streaming module is used throughout the consuming project for real-time communication:
 - SSE broker powers streaming LLM responses via `/v1/chat/completions` (stream mode)
 - WebSocket hub enables real-time notifications and debate session updates
 - gRPC streaming supports the gRPC server (`cmd/grpc-server/`)
 - Webhook dispatch delivers event notifications to external systems
 - HTTP client with circuit breaker handles provider API calls with fault tolerance
-- Transport abstraction allows HelixAgent to switch protocols transparently
-- The Gin adapters integrate directly with HelixAgent's Gin-based HTTP handlers
+- Transport abstraction allows the consuming project to switch protocols transparently
+- The Gin adapters integrate directly with the consuming project's Gin-based HTTP handlers
 - The realtime package powers the Constitution Watcher for detecting project changes
 
-The internal adapter at `internal/adapters/streaming/` bridges these generic types to HelixAgent-specific interfaces.
+The internal adapter at `internal/adapters/streaming/` bridges these generic types to project-specific interfaces.
 
 ## Anti-Bluff Guarantees (Round 284 — 2026-05-19)
 
