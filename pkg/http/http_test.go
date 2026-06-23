@@ -64,8 +64,12 @@ func TestClient_Request_Success(t *testing.T) {
 	defer server.Close()
 
 	c := NewClient(&Config{
-		MaxRetries:              3,
-		Timeout:                 5 * time.Second,
+		MaxRetries: 3,
+		// Generous timeout: the server is a local httptest instance that
+		// responds instantly, so this only fires on a genuine hang — not on
+		// scheduler starvation under concurrent host load (a 5s timeout × 3
+		// retries spuriously failed this test at ~20s under load; §11.4.50).
+		Timeout:                 30 * time.Second,
 		BackoffBase:             10 * time.Millisecond,
 		BackoffMax:              100 * time.Millisecond,
 		CircuitBreakerThreshold: 5,
