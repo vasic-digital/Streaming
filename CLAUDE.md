@@ -13,9 +13,5 @@ parent project root to resolve the constitution from any nested location.
 
 # CLAUDE.md — Streaming
 
-## Project Context
-This submodule is part of the consuming project.
-See the [feature spec](https://github.com/HelixDevelopment/HelixPlay/blob/001-helixplay-system/specs/001-helixplay-system/spec.md).
-
 ## Submodule-Specific Notes
 <!-- Add submodule-specific AI agent guidance here -->
