@@ -1261,7 +1261,7 @@ func TestReadPump_ContextCancelledBeforeStart(t *testing.T) {
 	wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
 	conn, _, err := ws.DefaultDialer.Dial(wsURL, nil)
 	if err != nil {
-		t.Skipf("could not connect: %v", err)
+		t.Skipf("could not connect: %v (SKIP-OK: #env-no-test-server)", err)
 	}
 	defer conn.Close()
 
